@@ -44,5 +44,5 @@ class Network():
 
 mnist = input_data.read_data_sets('/tmp/data', one_hot = True)
 
-net = Network([784, 500, 500, 500, 10])
+net = Network([784, 500, 500, 10])
 net.train(epochs = 10, batch_size = 100)
