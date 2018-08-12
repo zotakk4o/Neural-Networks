@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 
 
@@ -17,7 +16,7 @@ class Network():
         y = tf.placeholder(float)
 
         pred = self.feedforward(x)
-        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits = pred,
+        cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = pred,
                                                                          labels = y))
         optimizer = tf.train.AdamOptimizer().minimize(cost)
 
@@ -45,4 +44,4 @@ class Network():
 mnist = input_data.read_data_sets('/tmp/data', one_hot = True)
 
 net = Network([784, 500, 500, 10])
-net.train(epochs = 10, batch_size = 100)
+net.train(epochs = 15, batch_size = 100)
