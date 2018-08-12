@@ -13,8 +13,8 @@ class Network():
             self.layers.append(layer)
 
     def train(self, epochs, batch_size):
-        x = tf.placeholder(tf.float32)
-        y = tf.placeholder(tf.float32)
+        x = tf.placeholder(float, [None, 784])
+        y = tf.placeholder(float)
 
         pred = self.feedforward(x)
         cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits = pred,
@@ -25,8 +25,9 @@ class Network():
             sess.run(tf.global_variables_initializer())
             for epoch in range(epochs):
                 for _ in range(0, int(mnist.train.num_examples / batch_size)):
-                    ep_x, ep_y = mnist.train.next_batch(batch_size)
-                    _, c = sess.run([optimizer, cost], feed_dict = {x: ep_x, y: ep_y})
+                    batch_x, batch_y = mnist.train.next_batch(batch_size)
+                    sess.run(optimizer, feed_dict = {x: batch_x, y: batch_y})
+
                 correct = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
                 accuracy = tf.reduce_mean(tf.cast(correct, float))
                 print(
@@ -34,11 +35,14 @@ class Network():
 
     def feedforward(self, a):
         for layer in self.layers:
-            a = tf.nn.tanh(tf.add(tf.matmul(a, layer['weights']), layer['biases']))
+            if layer != self.layers[-1]:
+                a = tf.nn.relu(tf.add(tf.matmul(a, layer['weights']), layer['biases']))
+            else:
+                a = tf.add(tf.matmul(a, layer['weights']), layer['biases'])
         return a
 
 
-mnist = input_data.read_data_sets('/temp/data', one_hot = True)
+mnist = input_data.read_data_sets('/tmp/data', one_hot = True)
 
-net = Network([784, 300, 10])
-net.train(epochs = 30, batch_size = 16)
+net = Network([784, 500, 500, 500, 10])
+net.train(epochs = 10, batch_size = 100)
