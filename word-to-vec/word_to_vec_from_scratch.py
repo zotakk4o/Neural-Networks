@@ -16,7 +16,6 @@ class Word_To_Vec_FS():
         self.word2index = {}
         self.index2word = {}
         self.weights = []
-        self.biases = []
         self.layers = []
         self.vocab = []
 
@@ -42,12 +41,11 @@ class Word_To_Vec_FS():
             self.vocab_len = len(self.word2index)
             self.initialize_training_parameters()
 
-            print(f"Vocabulary, biases and weights created for {self.vocab_len} words")
+            print(f"Vocabulary and weights created for {self.vocab_len} words")
 
     def initialize_training_parameters(self):
         self.layers = [self.vocab_len, 100, self.vocab_len]
         self.weights = [np.random.uniform(-0.8, 0.8, (x, y)) for x, y in zip(self.layers[:-1], self.layers[1:])]
-        self.biases = [np.random.uniform(-0.8, 0.8, (x, 1)) for x in self.layers[1:]]
 
     def one_hot_encode_vec(self, word):
         output_arr = np.zeros(self.vocab_len)
