@@ -1,8 +1,8 @@
+import time
 import numpy as np
 import operator
 import math
 import re
-import time
 
 
 class Word_To_Vec_FS():
@@ -18,6 +18,7 @@ class Word_To_Vec_FS():
         self.weights = []
         self.biases = []
         self.layers = []
+        self.vocab = []
 
         self.convert_text_to_vec()
 
@@ -32,13 +33,13 @@ class Word_To_Vec_FS():
                     match = re.match("[^-][a-zA-Z0-9-]+", l)
                     if match:
                         match = match.group(0).lower()
+                        self.vocab.append(match)
                         if match not in self.word2index:
                             self.word2index[match] = index
                             self.index2word[index] = match
                             index += 1
 
             self.vocab_len = len(self.word2index)
-
             self.initialize_training_parameters()
 
             print(f"Vocabulary, biases and weights created for {self.vocab_len} words")
@@ -54,15 +55,15 @@ class Word_To_Vec_FS():
         return output_arr
 
     def skip_gram(self):
-        for word, index in self.word2index.items():
+        for index, word in enumerate(self.vocab):
             input_vec = self.one_hot_encode_vec(word)
             output_vec = []
 
             for prev in range(index - 1, max(index - 1 - int(self.window_size / 2), -1), -1):
-                output_vec.append(self.one_hot_encode_vec(self.index2word[prev]))
+                output_vec.append(self.one_hot_encode_vec(self.vocab[prev]))
 
             for following in range(index + 1, min(index + 1 + int(self.window_size / 2), self.vocab_len)):
-                output_vec.append(self.one_hot_encode_vec(self.index2word[following]))
+                output_vec.append(self.one_hot_encode_vec(self.vocab[following]))
 
             yield np.array([input_vec, output_vec])
 
@@ -72,8 +73,8 @@ class Word_To_Vec_FS():
         last_progress = 0
         progress_time = time.time()
         for epoch in range(epochs):
-            if(progress > last_progress + 5):
-                print(f"Progress: {math.floor(progress)}%, Time per 5%: {progress_time - time.time()} seconds")
+            if progress > last_progress + 5:
+                print(f"Progress: {math.floor(progress)}%, Time per 5%: {format(time.time() - progress_time, '.2f')} seconds")
                 last_progress = progress
                 progress_time = time.time()
 
@@ -104,20 +105,26 @@ class Word_To_Vec_FS():
         return exps / np.sum(exps, axis = 0)
 
     def process_word(self, word):
-        print(f"Target word: {word}")
-        dict = {}
-        output_softmax, _, _ = self.feed_forward(self.one_hot_encode_vec(word))
-        for index, word in enumerate(output_softmax):
-            dict[self.index2word[index]] = word
+        if word not in self.vocab:
+            print('Word not found in vocabulary!')
 
-        sorted_dict = sorted(dict.items(), key = operator.itemgetter(1))
-        for key, value in sorted_dict:
-            value = format(value, '.5f')
-            print(f"Context word: {key}, Probability: {value}")
+        else:
+            print(f"Target word: {word}")
+            dict = {}
+            output_softmax, _, _ = self.feed_forward(self.one_hot_encode_vec(word))
+            for index, probability in enumerate(output_softmax):
+                dict[self.index2word[index]] = probability
+
+            sorted_dict = sorted(dict.items(), key = operator.itemgetter(1))
+            for key, value in sorted_dict:
+                value = format(value, '.5f')
+                print(f"Context word: {key}, Probability: {value}")
 
 
-w2v = Word_To_Vec_FS('dataset.txt', 2)
-w2v.train_word_to_vec(1000)
-w2v.process_word('seem')
-print('--------------')
-w2v.process_word('boy')
+w2v = Word_To_Vec_FS('dataset.txt', 5)
+w2v.train_word_to_vec(100)
+w2v.process_word('quick')
+print('-------------')
+w2v.process_word('fox')
+print('-------------')
+w2v.process_word('dog')
